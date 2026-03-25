@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GHOrg — scrape de organizações GitHub</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="header">
+      <h1>GHOrg</h1>
+      <p class="subtitle">
+        Pedidos de scrape de perfil de organização no GitHub (API local).
+      </p>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <h2>Novo pedido</h2>
+        <form id="form-org" class="form">
+          <label for="org">Organização — login ou URL do GitHub</label>
+          <div class="form-row">
+            <input
+              id="org"
+              name="organizationName"
+              type="text"
+              placeholder="nodejs ou https://github.com/nodejs"
+              required
+              autocomplete="off"
+              title="Login (ex.: nodejs) ou URL completa do perfil"
+            />
+            <button type="submit">Enviar</button>
+          </div>
+          <p id="form-msg" class="msg" aria-live="polite"></p>
+        </form>
+
+        <h2>Pedidos recentes</h2>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Organização</th>
+                <th>Status</th>
+                <th>ID (resumido)</th>
+                <th>Criado</th>
+                <th class="col-actions" aria-label="Ações"></th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pagination">
+          <button type="button" id="btn-prev" class="btn-secondary" disabled>
+            Anterior
+          </button>
+          <span id="page-info" class="page-info"></span>
+          <button type="button" id="btn-next" class="btn-secondary" disabled>
+            Próxima
+          </button>
+        </div>
+        <button type="button" id="btn-refresh" class="btn-secondary">
+          Atualizar lista
+        </button>
+      </section>
+
+      <section class="panel detail" id="detail-panel">
+        <h2>Detalhe</h2>
+        <p class="hint">Nenhum pedido selecionado.</p>
+        <div id="detail-main" class="detail-main hidden">
+          <div id="detail-banner" class="detail-banner"></div>
+          <div id="detail-summary" class="detail-summary"></div>
+          <details id="detail-json-details" class="json-details hidden">
+            <summary class="json-details-summary">
+              <span class="json-details-summary-text">JSON bruto</span>
+              <button
+                type="button"
+                id="btn-copy-json"
+                class="btn-copy-json hidden"
+                aria-label="Copiar JSON"
+                title="Copiar JSON"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                  <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                </svg>
+              </button>
+            </summary>
+            <pre id="detail-json" class="json-out json-out-nested"></pre>
+          </details>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <a href="/health">GET /health</a>
+      ·
+      <span>API em <code>/api/requests</code></span>
+    </footer>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

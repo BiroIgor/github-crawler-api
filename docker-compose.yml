@@ -1,0 +1,60 @@
+# Nomenclatura: ghorg = GitHub Organization (contexto do scrape)
+# Credenciais de desenvolvimento — use variáveis em .env (não commitar produção).
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ghorg-requests-postgres
+    environment:
+      POSTGRES_USER: ghorg_api_svc
+      POSTGRES_PASSWORD: ${GHORG_POSTGRES_PASSWORD:-ghorg_local_postgres}
+      POSTGRES_DB: ghorg_requests_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ghorg_pg_data:/var/lib/postgresql/data
+      - ./init-scripts/postgres:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ghorg_api_svc -d ghorg_requests_db",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mongo:
+    image: mongo:6
+    container_name: ghorg-profiles-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - ghorg_mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: ghorg-scrape-queue-rabbit
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ghorg_queue_svc
+      RABBITMQ_DEFAULT_PASS: ${GHORG_RABBITMQ_PASSWORD:-ghorg_local_rabbit}
+    volumes:
+      - ghorg_rabbit_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  ghorg_pg_data:
+  ghorg_mongo_data:
+  ghorg_rabbit_data:
