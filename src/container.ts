@@ -32,11 +32,10 @@ export async function createContainer(): Promise<AppContainer> {
   await connectMongo(env);
 
   const rabbit = new RabbitMqConnection(env.RABBITMQ_URL);
-  const channel = await rabbit.getChannel();
 
   const requestRepository = new PgRequestRepository(pool);
   const resultRepository = new MongoCrawlerResultRepository();
-  const queuePublisher = new RabbitMqPublisher(async () => channel);
+  const queuePublisher = new RabbitMqPublisher(() => rabbit.getChannel());
 
   const githubCrawler = new CrawleeGithubCrawler({
     proxyUrls: env.ghorgProxyUrlList,

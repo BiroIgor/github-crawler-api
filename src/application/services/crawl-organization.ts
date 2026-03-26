@@ -23,8 +23,7 @@ export class CrawlOrganizationService {
     await this.requestRepository.updateStatus(requestId, "processing", null);
 
     try {
-      const { data, metadata } =
-        await this.githubCrawler.crawl(organizationName);
+      const { data, metadata } = await this.githubCrawler.crawl(organizationName);
 
       const result: CrawlerResult = {
         requestId,

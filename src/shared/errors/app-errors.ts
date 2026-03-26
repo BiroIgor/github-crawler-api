@@ -22,3 +22,10 @@ export class ValidationError extends AppError {
     this.name = "ValidationError";
   }
 }
+
+export class ConflictError extends AppError {
+  constructor(message = "Conflito com o estado atual do recurso") {
+    super(message, 409, "CONFLICT");
+    this.name = "ConflictError";
+  }
+}

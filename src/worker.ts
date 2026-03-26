@@ -10,7 +10,7 @@ async function main() {
 
   let activeJobs = 0;
 
-  await ch.consume(
+  const { consumerTag } = await ch.consume(
     GHORG_SCRAPE_JOBS_QUEUE,
     (msg) => {
       void (async () => {
@@ -48,7 +48,11 @@ async function main() {
   const shutdown = async (signal: string) => {
     logger.info({ signal }, "Encerrando worker…");
 
-    try { await ch.cancel(GHORG_SCRAPE_JOBS_QUEUE); } catch { /* já fechado */ }
+    try {
+      await ch.cancel(consumerTag);
+    } catch {
+      /* já fechado */
+    }
 
     const deadline = Date.now() + 30_000;
     while (activeJobs > 0 && Date.now() < deadline) {

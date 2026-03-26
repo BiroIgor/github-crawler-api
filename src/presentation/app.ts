@@ -18,11 +18,7 @@ export function createExpressApp(container: AppContainer): express.Express {
       contentSecurityPolicy: {
         directives: {
           ...contentSecurityPolicy.getDefaultDirectives(),
-          "img-src": [
-            "'self'",
-            "data:",
-            "https://avatars.githubusercontent.com",
-          ],
+          "img-src": ["'self'", "data:", "https://avatars.githubusercontent.com"],
         },
       },
     }),
@@ -49,10 +45,7 @@ export function createExpressApp(container: AppContainer): express.Express {
     container.listRequests,
     container.deleteRequest,
   );
-  const healthController = new HealthController(
-    container.pool,
-    container.rabbit,
-  );
+  const healthController = new HealthController(container.pool, container.rabbit);
 
   app.use("/health", healthRouter(healthController));
   app.use("/api/requests", requestsRouter(requestsController));

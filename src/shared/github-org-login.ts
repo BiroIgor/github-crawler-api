@@ -12,9 +12,7 @@ export function extractGithubOrgLogin(raw: string): string {
   if (!s) return s;
   if (s.startsWith("@")) s = s.slice(1).trim();
 
-  const fromUrl = s.match(
-    /(?:https?:\/\/)?(?:www\.)?github\.com\/([^/?#]+)/i,
-  );
+  const fromUrl = s.match(/(?:https?:\/\/)?(?:www\.)?github\.com\/([^/?#]+)/i);
   if (fromUrl) {
     s = fromUrl[1];
   } else {

@@ -2,6 +2,7 @@ node_modules/
 dist/
 .env
 *.log
+.eslintcache
 .DS_Store
 Thumbs.db
 

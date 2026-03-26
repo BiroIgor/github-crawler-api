@@ -17,6 +17,7 @@ const paginationEl = document.getElementById("pagination");
 const LIST_LIMIT = 15;
 let listOffset = 0;
 let lastListLength = 0;
+let listTotal = 0;
 
 let selectedId = null;
 let pollTimer = null;
@@ -52,19 +53,19 @@ async function fetchOne(id) {
 
 function updatePaginationControls() {
   if (!btnPrev || !btnNext || !pageInfo) return;
-  const hideBar = listOffset === 0 && lastListLength === 0;
+  const hideBar = listOffset === 0 && lastListLength === 0 && listTotal === 0;
   if (paginationEl) paginationEl.classList.toggle("hidden", hideBar);
   if (hideBar) return;
 
   btnPrev.disabled = listOffset === 0;
-  btnNext.disabled = lastListLength < LIST_LIMIT;
+  btnNext.disabled = listOffset + lastListLength >= listTotal;
   if (lastListLength === 0) {
     pageInfo.textContent = "Nenhum pedido nesta página — volte uma página.";
     return;
   }
   const from = listOffset + 1;
   const to = listOffset + lastListLength;
-  pageInfo.textContent = `Itens ${from}–${to} (${LIST_LIMIT} por página)`;
+  pageInfo.textContent = `Itens ${from}–${to} de ${listTotal}`;
 }
 
 async function deleteRequestById(id) {
@@ -315,6 +316,7 @@ async function refreshList() {
       data = await fetchListPage();
     }
     lastListLength = (data.items ?? []).length;
+    listTotal = Number(data.total ?? 0);
     renderRows(data.items ?? []);
     updatePaginationControls();
     if (selectedId) {
@@ -364,6 +366,10 @@ async function selectRow(id) {
   if (detailJsonDetails) detailJsonDetails.classList.add("hidden");
   syncDetailCopyButton();
   resetJsonCopyButton();
+
+  if (window.innerWidth < 900 && detailPanel) {
+    detailPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   if (pollTimer) clearInterval(pollTimer);
   pollTimer = null;

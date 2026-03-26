@@ -14,8 +14,7 @@ const createBodySchema = z.object({
     .max(2048)
     .transform((s) => extractGithubOrgLogin(s))
     .refine((s) => GHORG_LOGIN_PATTERN.test(s), {
-      message:
-        "Login inválido. Exemplos: facebook ou https://github.com/facebook",
+      message: "Login inválido. Exemplos: facebook ou https://github.com/facebook",
     }),
 });
 
@@ -61,11 +60,7 @@ const uuidParam = z.object({
   id: z.string().uuid(),
 });
 
-export function validateIdParam(
-  req: Request,
-  _res: Response,
-  next: NextFunction,
-): void {
+export function validateIdParam(req: Request, _res: Response, next: NextFunction): void {
   const parsed = uuidParam.safeParse(req.params);
   if (!parsed.success) {
     next(new ValidationError("ID deve ser um UUID válido"));

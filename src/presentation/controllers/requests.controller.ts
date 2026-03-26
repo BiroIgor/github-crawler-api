@@ -29,8 +29,7 @@ export class RequestsController {
       res.json({
         request,
         result,
-        pending:
-          request.status === "pending" || request.status === "processing",
+        pending: request.status === "pending" || request.status === "processing",
       });
     } catch (e) {
       next(e);
@@ -40,8 +39,8 @@ export class RequestsController {
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { limit, offset } = req.listQuery!;
-      const items = await this.listRequests.execute(limit, offset);
-      res.json({ items, limit, offset });
+      const { items, total } = await this.listRequests.execute(limit, offset);
+      res.json({ items, total, limit, offset });
     } catch (e) {
       next(e);
     }

@@ -1,6 +1,6 @@
 # GHOrg — API + Crawler de organizações GitHub
 
-Teste técnico: API **Node.js/Express** que recebe o nome de uma organização no GitHub, enfileira o scraping via **RabbitMQ**, extrai dados da página pública com **Crawlee/Cheerio** (sem Selenium/Puppeteer), persiste requisições no **PostgreSQL** e snapshots parseados no **MongoDB**.
+Teste técnico: API **Node.js/Express** que recebe o nome de uma organização no GitHub, enfileira o scraping via **RabbitMQ**, extrai dados da página pública com **Crawlee/Cheerio**, persiste requisições no **PostgreSQL** e snapshots parseados no **MongoDB**.
 
 ## Arquitetura
 
@@ -39,8 +39,9 @@ Dependency Injection manual via `container.ts`: use cases recebem **interfaces**
 - **Banco relacional:** PostgreSQL 15 — tabela `ghorg_scrape_requests`
 - **Banco não-relacional:** MongoDB 6 — collection `ghorg_organization_profiles`
 - **Fila:** RabbitMQ 3 (`amqplib`) — queue `ghorg_scrape_jobs` + DLX/DLQ
-- **Validação:** Zod (body, query params)
-- **Logging:** pino (JSON estruturado)
+- **Validação:** Zod (body, query params, env)
+- **Logging:** pino (JSON estruturado, pino-pretty em dev)
+- **Linter/Formatter:** ESLint 9 (flat config) + Prettier + typescript-eslint
 
 ## Pré-requisitos
 
@@ -88,12 +89,36 @@ npm start            # API
 npm run start:worker # Worker
 ```
 
+### 5. API + worker em containers (Docker Compose)
+
+Com o `.env` na raiz do projeto, o `docker-compose.yml` sobe **Postgres, Mongo, RabbitMQ** e os serviços **`api`** e **`worker`** (imagem multi-stage do `Dockerfile`). As variáveis `DATABASE_URL`, `MONGODB_URI` e `RABBITMQ_URL` são definidas no compose com hostnames `postgres`, `mongo` e `rabbitmq` (adequado dentro da rede Docker).
+
+```bash
+docker compose up -d --build
+```
+
+- **UI:** http://localhost:3000  
+
+Para subir **apenas** bancos e fila (Node local com `npm run dev` / `dev:worker`):
+
+```bash
+docker compose up -d postgres mongo rabbitmq
+```
+
+## Qualidade de código
+
+```bash
+npm run lint      # ESLint + Prettier (regras em eslint.config.js)
+npm run lint:fix
+npm run format    # Prettier em src/**/*.ts
+```
+
 ## Endpoints da API
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `POST` | `/api/requests` | Cria requisição de scrape. Body: `{ "organizationName": "nodejs" }`. Aceita login ou URL (`https://github.com/nodejs`). Retorna `{ "requestId": "uuid" }`. |
-| `GET` | `/api/requests` | Lista requisições. Query: `?limit=15&offset=0`. Retorna `{ items, limit, offset }`. |
+| `POST` | `/api/requests` | Cria requisição de scrape. Body: `{ "organizationName": "nodejs" }`. Aceita login ou URL (`https://github.com/nodejs`). Retorna `{ "requestId": "uuid" }`. **409** se já existir pedido `pending` ou `processing` para a mesma organização. |
+| `GET` | `/api/requests` | Lista requisições. Query: `?limit=15&offset=0`. Retorna `{ items, total, limit, offset }`. |
 | `GET` | `/api/requests/:id` | Detalhe de uma requisição + resultado do crawler (se concluído). |
 | `DELETE` | `/api/requests/:id` | Remove requisição do PostgreSQL e snapshot do MongoDB. |
 | `GET` | `/health` | Status da API, PostgreSQL e RabbitMQ. |
@@ -161,11 +186,14 @@ Quando o HTML do perfil não traz o número, o código consulta `GET /orgs/{org}
 - Dead Letter Exchange (`ghorg_scrape_dlx`) + Dead Letter Queue (`ghorg_scrape_jobs_dlq`): mensagens que falham vão para a DLQ para inspeção/reprocessamento.
 - Worker com `prefetch(1)`: processa um job por vez.
 
+### Prevenção de duplicatas
+O `POST /api/requests` verifica se já existe pedido `pending` ou `processing` para a mesma organização antes de criar. Se existir, retorna **409 Conflict** com mensagem amigável (`ConflictError`).
+
 ### Segurança
 - **Helmet** com CSP customizada (permite avatars do GitHub).
 - **CORS** habilitado.
 - **Rate limit:** 120 req/min.
-- **Validação Zod** no body e query params.
+- **Validação Zod** no body, query params e variáveis de ambiente.
 
 ## Variáveis de ambiente
 
@@ -182,11 +210,16 @@ Quando o HTML do perfil não traz o número, o código consulta `GET /orgs/{org}
 
 ```
 github-crawler/
-├── docker-compose.yml
+├── Dockerfile                 # Multi-stage build (TS → prod)
+├── .dockerignore
+├── docker-compose.yml         # Postgres, Mongo, RabbitMQ, api, worker
+├── eslint.config.js           # ESLint 9 flat config
+├── .prettierrc
 ├── .env.example
 ├── package.json
 ├── tsconfig.json
 ├── public/                    # UI estática (HTML/CSS/JS)
+├── scripts/                   # Utilitários (smoke-test, clear-data)
 └── src/
     ├── domain/
     │   ├── entities/          # Request, CrawlerResult

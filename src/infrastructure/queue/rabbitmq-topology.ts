@@ -7,9 +7,7 @@ const DLQ = "ghorg_scrape_jobs_dlq";
 const DLX = "ghorg_scrape_dlx";
 const DLX_RK = "ghorg_dlq";
 
-export async function assertGhorgQueueTopology(
-  channel: amqp.Channel,
-): Promise<void> {
+export async function assertGhorgQueueTopology(channel: amqp.Channel): Promise<void> {
   await channel.assertExchange(DLX, "direct", { durable: true });
   await channel.assertQueue(DLQ, { durable: true });
   await channel.bindQueue(DLQ, DLX, DLX_RK);

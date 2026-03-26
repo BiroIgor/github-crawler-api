@@ -22,9 +22,7 @@ function parseStatsFromMetaText(text: string | null | undefined): {
   let people: number | null = null;
   if (!text?.trim()) return { repositories, people };
 
-  const repoMatch = text.match(
-    /(?:has|,|\s)\s*([\d.,]+[kKmM]?)\s+repositories?\b/i,
-  );
+  const repoMatch = text.match(/(?:has|,|\s)\s*([\d.,]+[kKmM]?)\s+repositories?\b/i);
   if (repoMatch) {
     repositories = parseKStyleNumber(repoMatch[1]);
   } else {
@@ -47,10 +45,7 @@ function escapeRegExp(s: string): string {
 }
 
 /** Perfil de **organização** expõe link para `/orgs/{login}/people`; usuário não. */
-export function isGithubOrganizationProfile(
-  $: CheerioAPI,
-  login: string,
-): boolean {
+export function isGithubOrganizationProfile($: CheerioAPI, login: string): boolean {
   const le = escapeRegExp(login.toLowerCase());
   const re = new RegExp(`/orgs/${le}/people/?$`, "i");
   let found = false;
@@ -85,10 +80,7 @@ function parseCounterInNavItem($: CheerioAPI, el: AnyNode): number | null {
 }
 
 /** Contagem em abas/links do tipo /orgs/{login}/people (layout React do GitHub). */
-function extractOrgPeopleFromPeopleTab(
-  $: CheerioAPI,
-  login: string,
-): number | null {
+function extractOrgPeopleFromPeopleTab($: CheerioAPI, login: string): number | null {
   const le = escapeRegExp(login.toLowerCase());
   const pathRe = new RegExp(`/orgs/${le}/people/?$`, "i");
 
@@ -272,16 +264,14 @@ export function parseGithubOrganizationPage(
   _proxyUsed: string | null,
 ): OrganizationData {
   const login =
-    $('meta[property="og:url"]').attr("content")?.split("/").filter(Boolean)
-      .pop() ||
+    $('meta[property="og:url"]').attr("content")?.split("/").filter(Boolean).pop() ||
     extractLoginFromUrl(sourceUrl) ||
     $("h1.p-nickname, .p-nickname").first().text().replace("@", "").trim() ||
     "";
 
   const name = pickOrganizationDisplayName($, login);
 
-  const ogDescMeta =
-    $('meta[property="og:description"]').attr("content")?.trim() ?? null;
+  const ogDescMeta = $('meta[property="og:description"]').attr("content")?.trim() ?? null;
 
   let description = pickOrganizationDescription($);
 
@@ -325,9 +315,7 @@ export function parseGithubOrganizationPage(
 
   let repositories = fromNav.repositories ?? fromMeta.repositories;
   let people =
-    fromNav.people ??
-    fromMeta.people ??
-    extractOrgPeopleFromPeopleTab($, login);
+    fromNav.people ?? fromMeta.people ?? extractOrgPeopleFromPeopleTab($, login);
 
   if (repositories === null || people === null) {
     $("a[href]").each((_, el) => {
@@ -362,8 +350,7 @@ export function parseGithubOrganizationPage(
     const nameFromHref = href.split("/").filter(Boolean).slice(-1)[0] ?? "";
     if (!nameFromHref) return;
 
-    const desc =
-      item.find(".pinned-item-desc, .repo-description").text().trim() || null;
+    const desc = item.find(".pinned-item-desc, .repo-description").text().trim() || null;
     const metaText = item.text();
 
     const starsMatch = metaText.match(/([\d.,kK]+)\s*stars?/i);
@@ -372,8 +359,7 @@ export function parseGithubOrganizationPage(
     const parseK = (s: string | undefined) => {
       if (!s) return 0;
       const x = s.trim().toLowerCase().replace(/,/g, "");
-      if (x.endsWith("k"))
-        return Math.round(Number.parseFloat(x.slice(0, -1)) * 1000);
+      if (x.endsWith("k")) return Math.round(Number.parseFloat(x.slice(0, -1)) * 1000);
       return Number.parseInt(x.replace(/\D/g, ""), 10) || 0;
     };
 
@@ -391,8 +377,7 @@ export function parseGithubOrganizationPage(
       if (n !== null) forks = n;
     }
 
-    const lang =
-      item.find("[itemprop='programmingLanguage']").text().trim() || null;
+    const lang = item.find("[itemprop='programmingLanguage']").text().trim() || null;
 
     pinnedRepos.push({
       name: nameFromHref,

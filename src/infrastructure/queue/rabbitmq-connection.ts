@@ -43,19 +43,13 @@ export class RabbitMqConnection {
       this.channel = ch;
 
       if (attempt > 1) {
-        logger.info(
-          { attempt },
-          "RabbitMQ reconectado com sucesso",
-        );
+        logger.info({ attempt }, "RabbitMQ reconectado com sucesso");
       }
 
       return ch;
     } catch (err) {
       if (attempt >= maxAttempts) {
-        logger.error(
-          { err, attempt },
-          "RabbitMQ: esgotadas tentativas de conexão",
-        );
+        logger.error({ err, attempt }, "RabbitMQ: esgotadas tentativas de conexão");
         throw err;
       }
       const delay = Math.min(baseDelay * 2 ** (attempt - 1), 30_000);

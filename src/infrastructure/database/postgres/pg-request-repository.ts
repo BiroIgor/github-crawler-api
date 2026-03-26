@@ -13,12 +13,7 @@ type Row = {
   updated_at: Date;
 };
 
-const ALLOWED: RequestStatus[] = [
-  "pending",
-  "processing",
-  "completed",
-  "failed",
-];
+const ALLOWED: RequestStatus[] = ["pending", "processing", "completed", "failed"];
 
 function mapStatus(s: string): RequestStatus {
   if (ALLOWED.includes(s as RequestStatus)) return s as RequestStatus;
@@ -59,6 +54,20 @@ export class PgRequestRepository implements RequestRepository {
     return mapRow(res.rows[0]);
   }
 
+  async findPendingByOrganization(
+    organizationName: string,
+  ): Promise<CrawlRequest | null> {
+    const res = await this.pool.query<Row>(
+      `SELECT id, organization_name, status, error_message, created_at, updated_at
+       FROM ${TABLE}
+       WHERE organization_name = $1 AND status IN ('pending', 'processing')
+       LIMIT 1`,
+      [organizationName],
+    );
+    if (res.rowCount === 0) return null;
+    return mapRow(res.rows[0]);
+  }
+
   async findAll(limit: number, offset: number): Promise<CrawlRequest[]> {
     const res = await this.pool.query<Row>(
       `SELECT id, organization_name, status, error_message, created_at, updated_at
@@ -68,6 +77,13 @@ export class PgRequestRepository implements RequestRepository {
       [limit, offset],
     );
     return res.rows.map(mapRow);
+  }
+
+  async count(): Promise<number> {
+    const res = await this.pool.query<{ total: string }>(
+      `SELECT COUNT(*)::text AS total FROM ${TABLE}`,
+    );
+    return Number.parseInt(res.rows[0]?.total ?? "0", 10);
   }
 
   async updateStatus(

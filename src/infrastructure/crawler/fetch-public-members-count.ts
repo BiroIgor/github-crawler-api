@@ -31,8 +31,7 @@ export async function fetchPublicMembersCount(
   token?: string,
 ): Promise<number | null> {
   const headers = buildGithubApiHeaders(token);
-  const firstUrl =
-    `https://api.github.com/orgs/${encodeURIComponent(orgLogin)}/public_members?per_page=100`;
+  const firstUrl = `https://api.github.com/orgs/${encodeURIComponent(orgLogin)}/public_members?per_page=100`;
 
   const first = await githubApiFetch(firstUrl, headers);
   if (first.status === 404) return null;

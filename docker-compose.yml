@@ -54,6 +54,47 @@ services:
       timeout: 10s
       retries: 5
 
+  api:
+    build: .
+    container_name: ghorg-api
+    command: ["node", "dist/index.js"]
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      PORT: "3000"
+      NODE_ENV: production
+      DATABASE_URL: postgresql://ghorg_api_svc:${GHORG_POSTGRES_PASSWORD:-ghorg_local_postgres}@postgres:5432/ghorg_requests_db
+      MONGODB_URI: mongodb://mongo:27017/ghorg_scrape_warehouse
+      RABBITMQ_URL: amqp://ghorg_queue_svc:${GHORG_RABBITMQ_PASSWORD:-ghorg_local_rabbit}@rabbitmq:5672
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  worker:
+    build: .
+    container_name: ghorg-worker
+    command: ["node", "dist/worker.js"]
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://ghorg_api_svc:${GHORG_POSTGRES_PASSWORD:-ghorg_local_postgres}@postgres:5432/ghorg_requests_db
+      MONGODB_URI: mongodb://mongo:27017/ghorg_scrape_warehouse
+      RABBITMQ_URL: amqp://ghorg_queue_svc:${GHORG_RABBITMQ_PASSWORD:-ghorg_local_rabbit}@rabbitmq:5672
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
 volumes:
   ghorg_pg_data:
   ghorg_mongo_data:

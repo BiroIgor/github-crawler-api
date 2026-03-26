@@ -9,10 +9,7 @@ import {
   isGithubOrganizationProfile,
   parseGithubOrganizationPage,
 } from "./github-parser.js";
-import {
-  parsePeoplePage,
-  computeTotalMembers,
-} from "./scrape-people-count.js";
+import { parsePeoplePage, computeTotalMembers } from "./scrape-people-count.js";
 import { fetchOrgPublicReposCount } from "./fetch-org-public-repos.js";
 import { normalizeGithubOrgInput } from "../../shared/github-org-login.js";
 
@@ -35,9 +32,7 @@ export class CrawleeGithubCrawler implements GithubCrawlerPort {
 
     const proxyUrls = this.options.proxyUrls ?? [];
     const proxyConfiguration =
-      proxyUrls.length > 0
-        ? new ProxyConfiguration({ proxyUrls })
-        : undefined;
+      proxyUrls.length > 0 ? new ProxyConfiguration({ proxyUrls }) : undefined;
 
     let orgParsed = false;
     let data!: OrganizationData;
@@ -61,8 +56,7 @@ export class CrawleeGithubCrawler implements GithubCrawlerPort {
             gotOptions.headers = {
               ...gotOptions.headers,
               "user-agent": UA,
-              accept:
-                "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+              accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
               "accept-language": "pt-BR,pt;q=0.9,en;q=0.8",
             };
           },
@@ -77,9 +71,7 @@ export class CrawleeGithubCrawler implements GithubCrawlerPort {
             if (!pageParam || pageParam === "1") {
               firstPeoplePage = info;
               if (info.maxPage > 1) {
-                await crawler.addRequests([
-                  `${peopleUrl}?page=${info.maxPage}`,
-                ]);
+                await crawler.addRequests([`${peopleUrl}?page=${info.maxPage}`]);
               }
             } else {
               lastPeoplePage = { usersOnPage: info.usersOnPage };
@@ -88,9 +80,7 @@ export class CrawleeGithubCrawler implements GithubCrawlerPort {
           }
 
           if (title.includes("Page not found") || title.includes("404")) {
-            log.info(
-              `GitHub retornou página não encontrada para ${reqUrl}`,
-            );
+            log.info(`GitHub retornou página não encontrada para ${reqUrl}`);
             throw new Error("Organização não encontrada no GitHub");
           }
           if (proxyUrls.length > 0) {
@@ -104,10 +94,7 @@ export class CrawleeGithubCrawler implements GithubCrawlerPort {
             proxyUsedLabel,
           );
           orgParsed = true;
-          if (
-            data.stats.people === null &&
-            isGithubOrganizationProfile($c, slug)
-          ) {
+          if (data.stats.people === null && isGithubOrganizationProfile($c, slug)) {
             await crawler.addRequests([peopleUrl]);
           }
         },
@@ -141,15 +128,13 @@ export class CrawleeGithubCrawler implements GithubCrawlerPort {
       const total = computeTotalMembers(firstPeoplePage, lastPeoplePage);
       if (total > 0) {
         data.stats.people = total;
-        peopleCountSource = "github_people_page_scrape" as CrawlMetadata["peopleCountSource"];
+        peopleCountSource =
+          "github_people_page_scrape" as CrawlMetadata["peopleCountSource"];
       }
     }
 
     if (data.stats.repositories === null) {
-      const n = await fetchOrgPublicReposCount(
-        slug,
-        this.options.githubToken,
-      );
+      const n = await fetchOrgPublicReposCount(slug, this.options.githubToken);
       if (n !== null) {
         data.stats.repositories = n;
         repositoriesCountSource = "github_org_rest_api";
